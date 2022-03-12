@@ -2,16 +2,18 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 contract Auction {
-  address payable proficiary;
+  address payable beneficiary;
   uint auctionEndingtime;
   address highestBidder;
   uint highestBid;
   mapping (address => uint) pendingBids;
+  bool auctionEnded;
 
   event highestBidding(address bidder, uint value);
+  event declareHighestBidder(address bidder, uint value);
 
-  constructor(address payable _proficiary, uint _biddingTime) {
-    proficiary = _proficiary;
+  constructor(address payable _beneficiary, uint _biddingTime) {
+    beneficiary = _beneficiary;
     auctionEndingtime = block.timestamp + _biddingTime;
   }
 
@@ -36,5 +38,13 @@ contract Auction {
         pendingBids[msg.sender] = _value;
       }
     }
+  }
+
+  function DeclareAuctionEnd() external{
+    require(auctionEndingtime > block.timestamp, 'Auction not ended yet');
+    require(auctionEnded, 'Ending Auction already called');
+    auctionEnded = true;
+    emit declareHighestBidder(highestBidder, highestBid);
+    beneficiary.transfer(highestBid);
   }
 }
